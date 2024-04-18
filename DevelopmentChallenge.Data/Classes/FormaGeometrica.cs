@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Resources;
 using System.Text;
 
 namespace DevelopmentChallenge.Data.Classes
@@ -54,44 +55,18 @@ namespace DevelopmentChallenge.Data.Classes
         public abstract decimal CalcularPerimetro();
         public abstract string ObtenerNombre(int cantidad, int idioma);
 
-        //Agregue traducciones al Italiano
+        // Método para generar el informe en diferentes idiomas
         public static string Imprimir(List<FormaGeometrica> formas, int idioma)
         {
             var sb = new StringBuilder();
 
             if (!formas.Any())
             {
-                switch (idioma)
-                {
-                    case Castellano:
-                        sb.Append("<h1>Lista vacía de formas!</h1>");
-                        break;
-                    case Ingles:
-                        sb.Append("<h1>Empty list of shapes!</h1>");
-                        break;
-                    case Italiano:
-                        sb.Append("<h1>Elenco vuoto di forme!</h1>");
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(idioma), "Idioma no soportado");
-                }
+                sb.Append(Resources.Get("EmptyListMessage", idioma));
             }
             else
             {
-                switch (idioma)
-                {
-                    case Castellano:
-                        sb.Append("<h1>Reporte de Formas</h1>");
-                        break;
-                    case Ingles:
-                        sb.Append("<h1>Shapes report</h1>");
-                        break;
-                    case Italiano:
-                        sb.Append("<h1>Rapporto sui moduli</h1>");
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(idioma), "Idioma no soportado");
-                }
+                sb.Append(Resources.Get("ReportHeader", idioma));
 
                 var diccionarioFormas = new Dictionary<int, FormaGeometrica>();
                 var diccionarioTotales = new Dictionary<int, Tuple<int, decimal, decimal>>();
@@ -118,36 +93,79 @@ namespace DevelopmentChallenge.Data.Classes
                     var (cantidad, areaTotal, perimetroTotal) = diccionarioTotales[kvp.Key];
                     var forma = kvp.Value;
 
-                    sb.Append($"{cantidad} {forma.ObtenerNombre(cantidad, idioma)} | {(idioma == Castellano ? "Área" : (idioma == Ingles ? "Area" : "Area"))} {areaTotal:#.##} | ");
-                    sb.Append($"{(idioma == Castellano ? "Perímetro" : (idioma == Ingles ? "Perimeter" : "Perimetro"))} {perimetroTotal:#.##} <br/>");
+                    sb.Append($"{cantidad} {forma.ObtenerNombre(cantidad, idioma)} | ");
+                    sb.Append($"{Resources.Get("AreaLabel", idioma)} {areaTotal:#.##} | ");
+                    sb.Append($"{Resources.Get("PerimeterLabel", idioma)} {perimetroTotal:#.##} <br/>");
                 }
 
-                switch (idioma)
-                {
-                    case Castellano:
-                        sb.Append("TOTAL:<br/>");
-                        break;
-                    case Ingles:
-                        sb.Append("TOTAL:<br/>");
-                        break;
-                    case Italiano:
-                        sb.Append("TOTALE:<br/>");
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(idioma), "Idioma no soportado");
-                }
-
-                sb.Append($"{diccionarioTotales.Values.Sum(t => t.Item1)} {(idioma == Castellano ? "formas" : (idioma == Ingles ? "shapes" : "forme"))} ");
-                sb.Append($"{(idioma == Castellano ? "Perímetro" : (idioma == Ingles ? "Perimeter" : "Perimetro"))} {diccionarioTotales.Values.Sum(t => t.Item3):#.##} ");
-                sb.Append($"{(idioma == Castellano ? "Área" : (idioma == Ingles ? "Area" : "Area"))} {diccionarioTotales.Values.Sum(t => t.Item2).ToString("#.##")}");
+                sb.Append(Resources.Get("TotalHeader", idioma));
+                sb.Append($"{diccionarioTotales.Values.Sum(t => t.Item1)} {Resources.Get("ShapesLabel", idioma)} ");
+                sb.Append($"{Resources.Get("PerimeterLabel", idioma)} {diccionarioTotales.Values.Sum(t => t.Item3):#.##} ");
+                sb.Append($"{Resources.Get("AreaLabel", idioma)} {diccionarioTotales.Values.Sum(t => t.Item2).ToString("#.##")}");
             }
 
             return sb.ToString();
         }
+
+
+        // Clase que almacena la cadena de textos traducida
+        public static class Resources
+        {
+            // Método para obtener la cadena de texto traducida dependiendo del idioma
+            public static string Get(string nombreValor, int idioma)
+            {
+                switch (idioma)
+                {
+                    case FormaGeometrica.Castellano:
+                        return Traducciones.Castellano[nombreValor];
+                    case FormaGeometrica.Ingles:
+                        return Traducciones.Ingles[nombreValor];
+                    case FormaGeometrica.Italiano:
+                        return Traducciones.Italiano[nombreValor];
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(idioma), "Idioma no soportado");
+                }
+            }
+        }
+
+        // Clase con traducciones para cada idioma. De esta forma podemos agregar un nuevo idioma de manera mas eficiente.
+        public static class Traducciones
+        {
+            public static Dictionary<string, string> Castellano = new Dictionary<string, string>
+        {
+            { "EmptyListMessage", "<h1>Lista vacía de formas!</h1>" },
+            { "ReportHeader", "<h1>Reporte de Formas</h1>" },
+            { "TotalHeader", "TOTAL:<br/>" },
+            { "ShapesLabel", "formas" },
+            { "PerimeterLabel", "Perímetro" },
+            { "AreaLabel", "Área" }
+            
+        };
+
+            public static Dictionary<string, string> Ingles = new Dictionary<string, string>
+        {
+            { "EmptyListMessage", "<h1>Empty list of shapes!</h1>" },
+            { "ReportHeader", "<h1>Shapes report</h1>" },
+            { "TotalHeader", "TOTAL:<br/>" },
+            { "ShapesLabel", "shapes" },
+            { "PerimeterLabel", "Perimeter" },
+            { "AreaLabel", "Area" }
+            
+        };
+
+            public static Dictionary<string, string> Italiano = new Dictionary<string, string>
+        {
+            { "EmptyListMessage", "<h1>Elenco vuoto di forme!</h1>" },
+            { "ReportHeader", "<h1>Rapporto sui moduli</h1>" },
+            { "TotalHeader", "TOTALE:<br/>" },
+            { "ShapesLabel", "forme" },
+            { "PerimeterLabel", "Perimetro" },
+            { "AreaLabel", "Area" }
+            
+        };
+        }
     }
 
-    //Separe las formas geometricas segun su funcionalidad y agregue Trapecio y Rectangulo.
-    //Cada nueva forma geometrica hereda de FormaGeometrica e implementa sus metodos segun su funcionalidad.
     public class Cuadrado : FormaGeometrica
     {
         private readonly decimal _lado;
